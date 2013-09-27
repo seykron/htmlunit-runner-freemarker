@@ -13,6 +13,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.htmlunit.maven.AbstractRunner;
 
+import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.cache.URLTemplateLoader;
 import freemarker.template.Configuration;
@@ -55,7 +56,14 @@ public class FreemarkerRunner extends AbstractRunner {
     try {
       Configuration config = new Configuration();
       Object dataModel = initializeConfiguration(config);
-      config.setTemplateLoader(templateLoader);
+      TemplateLoader currentTemplateLoader = config.getTemplateLoader();
+
+      if (currentTemplateLoader != null) {
+        config.setTemplateLoader(new MultiTemplateLoader(
+            new TemplateLoader[] { templateLoader, currentTemplateLoader }));
+      } else {
+        config.setTemplateLoader(templateLoader);
+      }
 
       Template template = config.getTemplate(templateName);
 
