@@ -1,0 +1,176 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>oss-parent</artifactId>
+    <groupId>org.sonatype.oss</groupId>
+    <version>6</version>
+  </parent>
+
+  <groupId>org.htmlunit</groupId>
+  <artifactId>htmlunit-runner-freemarker</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <name>htmlunit - Maven Plugin</name>
+  <description>Maven plugin to load test files into HtmlUnit.</description>
+
+  <developers>
+    <developer>
+      <id>seykron</id>
+      <name>Matias MI</name>
+      <email>seykron@gmail.com</email>
+    </developer>
+  </developers>
+
+  <scm>
+    <url>https://github.com/seykron/htmlunit-runner-freemarker</url>
+    <connection>scm:git:https://github.com/seykron/htmlunit-runner-freemarker.git</connection>
+    <developerConnection>scm:git:https://github.com/seykron/htmlunit-runner-freemarker.git</developerConnection>
+  </scm>
+
+  <!-- The location where deploy and site-deploy leaves the artifacts.
+       repositoryRoot is defined in globant parent pom. This configuration is
+       overriden in dev to skip this pom site. -->
+  <distributionManagement>
+    <repository>
+      <id>htmlunit-plugin-release</id>
+      <url>${repositoryRoot}</url>
+    </repository>
+    <site>
+      <id>htmlunit-plugin-release</id>
+      <url>${repositoryRoot}/site/${project.groupId}/htmlunit-runner-freemarker/${project.version}</url>
+    </site>
+  </distributionManagement>
+
+  <dependencies>
+    <!-- Plugin test deps -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>1.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Plugin Dependencies -->
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>2.3.20</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.htmlunit</groupId>
+      <artifactId>htmlunit-maven-plugin</artifactId>
+      <version>${version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <!-- Prepares and performs the release. This basically deploys the
+      distribution package configured in the assembly-plugin.
+      -->
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.2.2</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <pushChanges>false</pushChanges>
+          <localCheckout>true</localCheckout>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.htmlunit</groupId>
+            <artifactId>htmlunit-maven-plugin</artifactId>
+            <version>${version}</version>
+            <dependencies>
+              <dependency>
+                <groupId>org.htmlunit</groupId>
+                <artifactId>htmlunit-runner-freemarker</artifactId>
+                <version>${version}</version>
+              </dependency>
+            </dependencies>
+            <executions>
+              <execution>
+                <id>jasmine-tests</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <runnerClassName>org.htmlunit.maven.runner.FreemarkerRunner</runnerClassName>
+              <dependenciesClassLoader>true</dependenciesClassLoader>
+              <testDependenciesClassLoader>true</testDependenciesClassLoader>
+              <webClientConfiguration>
+                <javaScriptEnabled>true</javaScriptEnabled>
+              </webClientConfiguration>
+              <runnerConfiguration>
+                <outputDirectory>${project.build.directory}/htmlunit-tests</outputDirectory>
+                <debugPort>9000</debugPort>
+                <testFiles>
+                  file:${basedir}/src/test/resources/**/*Test.ftl
+                </testFiles>
+              </runnerConfiguration>
+              <systemProperties>
+                <logback.configurationFile>${basedir}/src/test/resources/logback-runtime.xml</logback.configurationFile>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>
+
