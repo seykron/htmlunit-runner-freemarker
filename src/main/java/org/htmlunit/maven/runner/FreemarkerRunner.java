@@ -1,7 +1,6 @@
 package org.htmlunit.maven.runner;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
@@ -9,9 +8,10 @@ import java.net.URL;
 import java.util.HashMap;
 
 import org.antlr.stringtemplate.StringTemplate;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.htmlunit.maven.AbstractRunner;
+import org.htmlunit.maven.ResourceUtils;
 
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
@@ -31,16 +31,14 @@ public class FreemarkerRunner extends AbstractRunner {
   @Override
   protected void loadTest(final StringTemplate runnerTemplate,
       final URL test) {
-    final String templatePath = FilenameUtils.getPath(test.toString());
-    String templateName = FilenameUtils.getName(test.toString());
-
     TemplateLoader templateLoader = new URLTemplateLoader() {
       @Override
       protected URL getURL(final String requiredTemplateName) {
         try {
-          URL url = new URL(templatePath + requiredTemplateName);
-          File file = new File(url.getFile());
-          if (file.exists()) {
+          String templatePath;
+          templatePath = StringUtils.substringBeforeLast(test.toString(), "/");
+          URL url = new URL(templatePath + "/" + requiredTemplateName);
+          if (isValidUrl(url)) {
             return url;
           } else {
             return null;
@@ -54,6 +52,8 @@ public class FreemarkerRunner extends AbstractRunner {
     OutputStreamWriter writer = new OutputStreamWriter(out);
 
     try {
+      String name = StringUtils.substringAfterLast(test.toString(), "/");
+
       Configuration config = new Configuration();
       Object dataModel = initializeConfiguration(config);
       TemplateLoader currentTemplateLoader = config.getTemplateLoader();
@@ -65,8 +65,7 @@ public class FreemarkerRunner extends AbstractRunner {
         config.setTemplateLoader(templateLoader);
       }
 
-      Template template = config.getTemplate(templateName);
-
+      Template template = config.getTemplate(name);
       template.process(dataModel, writer);
 
       runnerTemplate.setAttribute("testFiles", out.toString());
@@ -87,5 +86,21 @@ public class FreemarkerRunner extends AbstractRunner {
    */
   protected Object initializeConfiguration(final Configuration config) {
     return new HashMap<String, Object>();
+  }
+
+  /** Determines whether the specific URL is valid and it can be reached.
+   *
+   * @param url Url to verify. Cannot be null.
+   * @return Returns <code>true</code> if the URL is valid, false otherwise.
+   */
+  private boolean isValidUrl(final URL url) {
+    try {
+      // This is ugly, but there's no way to check whether the url is actually
+      // reachable without fetching it.
+      ResourceUtils.readAsText(url);
+      return true;
+    } catch (Exception cause) {
+      return false;
+    }
   }
 }
