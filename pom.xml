@@ -7,7 +7,7 @@
     <version>6</version>
   </parent>
 
-  <groupId>org.htmlunit</groupId>
+  <groupId>com.github.seykron</groupId>
   <artifactId>htmlunit-runner-freemarker</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -32,14 +32,16 @@
        repositoryRoot is defined in globant parent pom. This configuration is
        overriden in dev to skip this pom site. -->
   <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
     <repository>
-      <id>htmlunit-plugin-release</id>
-      <url>${repositoryRoot}</url>
+      <id>sonatype-nexus-staging</id>
+      <name>Sonatype Nexus release repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
-    <site>
-      <id>htmlunit-plugin-release</id>
-      <url>${repositoryRoot}/site/${project.groupId}/htmlunit-runner-freemarker/${project.version}</url>
-    </site>
   </distributionManagement>
 
   <dependencies>
@@ -65,44 +67,44 @@
 
     <!-- Plugin Dependencies -->
     <dependency>
-      <groupId>org.freemarker</groupId>
-      <artifactId>freemarker</artifactId>
-      <version>2.3.20</version>
-      <optional>true</optional>
+      <groupId>com.github.seykron</groupId>
+      <artifactId>htmlunit-maven-plugin</artifactId>
+      <version>1.0</version>
     </dependency>
 
     <dependency>
-      <groupId>org.htmlunit</groupId>
-      <artifactId>htmlunit-maven-plugin</artifactId>
-      <version>${version}</version>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>2.3.20</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <version>2.5</version>
-      <optional>true</optional>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
       <version>3.2.4.RELEASE</version>
-      <optional>true</optional>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
       <version>3.2.4.RELEASE</version>
-      <optional>true</optional>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
       <version>3.2.4.RELEASE</version>
-      <optional>true</optional>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -131,13 +133,7 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
+
       <!-- Prepares and performs the release. This basically deploys the
       distribution package configured in the assembly-plugin.
       -->
@@ -148,6 +144,8 @@
           <autoVersionSubmodules>true</autoVersionSubmodules>
           <pushChanges>false</pushChanges>
           <localCheckout>true</localCheckout>
+      		<arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+          <useReleaseProfile>true</useReleaseProfile>
         </configuration>
       </plugin>
     </plugins>
@@ -159,17 +157,19 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.htmlunit</groupId>
+            <groupId>com.github.seykron</groupId>
             <artifactId>htmlunit-maven-plugin</artifactId>
-            <version>${version}</version>
+            <version>1.1</version>
             <dependencies>
+              <!-- Runner dependency. -->
               <dependency>
-                <groupId>org.htmlunit</groupId>
+                <groupId>com.github.seykron</groupId>
                 <artifactId>htmlunit-runner-freemarker</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
               </dependency>
+
               <!-- The following dependencies are mandatory for integration test
-                because they're marked as optional, so projects using this plugin
+                because they're marked as provided, so projects using this plugin
                 can define they're own version. -->
               <dependency>
                 <groupId>org.freemarker</groupId>
@@ -224,6 +224,37 @@
               <systemProperties>
                 <logback.configurationFile>${basedir}/src/test/resources/logback-runtime.xml</logback.configurationFile>
               </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.4</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <keyname>B8D9574C</keyname>
+              <passphrase>${gpg.passphrase}</passphrase>
             </configuration>
           </plugin>
         </plugins>
