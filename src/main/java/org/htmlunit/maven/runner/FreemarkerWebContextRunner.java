@@ -83,8 +83,12 @@ public class FreemarkerWebContextRunner extends FreemarkerRunner {
     servletRequest = new MockHttpServletRequest(servletContext);
     servletRequest.setAttribute(DispatcherServlet.LOCALE_RESOLVER_ATTRIBUTE,
         localeResolver);
-    servletRequest
-      .setAttribute(RequestContext.WEB_APPLICATION_CONTEXT_ATTRIBUTE, context);
+    // For spring 2.
+    servletRequest.setAttribute(DispatcherServlet
+        .WEB_APPLICATION_CONTEXT_ATTRIBUTE, context);
+    // For spring 3.
+    servletRequest.setAttribute(RequestContext.class.getName() + ".CONTEXT",
+        context);
     return servletRequest;
   }
 }
