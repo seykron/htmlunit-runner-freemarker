@@ -1,3 +1,6 @@
+![CI](https://api.travis-ci.org/seykron/htmlunit-runner-freemarker.png "Travis CI -
+Continuous Integration")
+
 htmlunit-runner-freemarker
 ==========================
 
@@ -54,7 +57,7 @@ WebApplicationContext to emulate a Freemarker view inside a web application.
     </execution>
   </executions>
   <configuration>
-    **<runnerClassName>org.htmlunit.maven.runner.FreemarkerWebContextRunner</runnerClassName>**
+    <runnerClassName>org.htmlunit.maven.runner.FreemarkerWebContextRunner</runnerClassName>
     <webClientConfiguration>
       <javaScriptEnabled>true</javaScriptEnabled>
     </webClientConfiguration>
